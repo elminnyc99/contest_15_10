@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {VaultV2} from "../../lib/vault-v2/src/VaultV2.sol";
-import {ERC20Mock} from "../../lib/vault-v2/test/mocks/ERC20Mock.sol";
 import {IVaultV2} from "../../lib/vault-v2/src/interfaces/IVaultV2.sol";
 import {TestYieldToken} from "./mocks/TestYieldToken.sol";
 import {TestERC20} from "./mocks/TestERC20.sol";
