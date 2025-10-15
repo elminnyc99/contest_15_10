@@ -19,9 +19,6 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "lib/vault-v2"]
-	path = lib/vault-v2
-	url = https://github.com/morpho-org/vault-v2
 [submodule "lib/v3-periphery"]
 	path = lib/v3-periphery
 	url = https://github.com/UniSwap/v3-periphery
