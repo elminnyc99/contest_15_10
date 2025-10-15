@@ -28,6 +28,7 @@ contract AlchemistCurator is IAlchemistCurator, PermissionedProxy {
         pendingAdmin = _newAdmin;
     }
 
+    //@audit-info Pending admin nên là người gọi thay vì admin vì có thế set nhầm thành address 0 hoặc là một address sai
     function acceptAdminOwnership() external onlyAdmin {
         admin = pendingAdmin;
         pendingAdmin = address(0);

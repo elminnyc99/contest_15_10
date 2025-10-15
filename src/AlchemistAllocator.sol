@@ -20,12 +20,13 @@ contract AlchemistAllocator is PermissionedProxy, IAllocator {
         vault = IVaultV2(_vault);
 
         // allocate(address adapter, bytes memory data, uint256 assets)
-        permissionedCalls[0x5c9ce04d] = true;
+        permissionedCalls[0x5c9ce04d] = true; 
         // deallocate(address adapter, bytes memory data, uint256 assets)
         permissionedCalls[0x4b219d16] = true;
     }
 
     // Overriden vault actions
+    //@audit Admin hay operator có thể phân bổ bất kì amount nào nếu muốn.
     function allocate(address adapter, uint256 amount) external {
         require(msg.sender == admin || operators[msg.sender], "PD");
         bytes32 id = IMYTStrategy(adapter).adapterId();
@@ -38,6 +39,7 @@ contract AlchemistAllocator is PermissionedProxy, IAllocator {
             // caller is operator
             adjusted = adjusted > daoTarget ? adjusted : daoTarget;
         }
+        // @audit-info Biến adusted không được sử dụng
         // pass the old allocation to the adapter
         bytes memory oldAllocation = abi.encode(vault.allocation(id));
         vault.allocate(adapter, oldAllocation, amount);
