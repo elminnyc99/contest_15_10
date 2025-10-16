@@ -27,7 +27,8 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     uint256 public constant BPS = 10_000;
     uint256 public constant FIXED_POINT_SCALAR = 1e18;
 
-    uint256 public constant ONE_Q128 = uint256(1) << 128;
+    // Dấu chấm động
+    uint256 public constant ONE_Q128 = uint256(1) << 128;//1.0
 
     /// @inheritdoc IAlchemistV3Immutables
     string public constant version = "3.0.0";
@@ -45,21 +46,29 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     address public myt;
 
     /// @inheritdoc IAlchemistV3State
+    // Thừa số để chuyển đổi giữa debt token và underlying khi chúng có số decimal khác nhau 
+    //10^(debtDecimals - underlyingDecimals)
+    // 
     uint256 public underlyingConversionFactor;
 
     /// @inheritdoc IAlchemistV3State
+    // Tổng earmark của toàn hệ thống tăng lên khi có earmark và giảm xuống khi đã được re
     uint256 public cumulativeEarmarked;
 
     /// @inheritdoc IAlchemistV3State
+    // Giới hạn tổng số collateral được gửi vào hệ thống 
     uint256 public depositCap;
 
     /// @inheritdoc IAlchemistV3State
+    // Block number của lần earmark gần nhất
     uint256 public lastEarmarkBlock;
 
     /// @inheritdoc IAlchemistV3State
+    //
     uint256 public lastRedemptionBlock;
 
     /// @inheritdoc IAlchemistV3State
+    // Số dư MYT gần nhất được ghi nhận trong transmuter
     uint256 public lastTransmuterTokenBalance;
 
     /// @inheritdoc IAlchemistV3State
