@@ -27,7 +27,7 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     uint256 public constant BPS = 10_000;
     uint256 public constant FIXED_POINT_SCALAR = 1e18;
 
-    uint256 public constant ONE_Q128 = uint256(1) << 128;
+    uint256 public constant ONE_Q128 = uint256(1) << 128; //=1.0
 
     /// @inheritdoc IAlchemistV3Immutables
     string public constant version = "3.0.0";
@@ -36,12 +36,14 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     address public admin;
 
     /// @inheritdoc IAlchemistV3State
+    // Vault lưu trữ underlying token để trả outsourced fees.
     address public alchemistFeeVault;
 
-    /// @inheritdoc IAlchemistV3Immutables
+    /// @inheritdoc IAlchemistV3Immutables 
     address public debtToken;
 
     /// @inheritdoc IAlchemistV3State
+    // VaultV2 Morpho nơi lữu trữ tài sản đảm bảo
     address public myt;
 
     /// @inheritdoc IAlchemistV3State
