@@ -149,6 +149,7 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     mapping(uint256 => RedemptionInfo) private _redemptions;
 
     modifier onlyAdmin() {
+        // Nếu người gọi không phải là quản trị viên thì revert
         if (msg.sender != admin) {
             revert Unauthorized();
         }
@@ -156,6 +157,7 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     modifier onlyAdminOrGuardian() {
+        // Nếu người gọi không phải là quản trị viên và không phải là guardians thì revert
         if (msg.sender != admin && !guardians[msg.sender]) {
             revert Unauthorized();
         }
@@ -172,10 +174,26 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     constructor() initializer {}
 
     function initialize(AlchemistInitializationParams memory params) external initializer {
+        //_checkArgument: kiểm tra đối số
+        // protocolFee: Phí giao thức
+        // liquidatorFee: Phí cho người thanh lí
+        // repaymentFee: Phí hoàn trả
         _checkArgument(params.protocolFee <= BPS);
         _checkArgument(params.liquidatorFee <= BPS);
         _checkArgument(params.repaymentFee <= BPS);
 
+        //debtToken: Token Nợ
+        // underlyingToken: Token cơ bản
+        // underlyingCoversionFactor: Hệ số chuyển đổi cơ bản
+        // depositCap: Giới hạn tiền gửi
+        // minimumCollateralization: tài sản thế chấp tối thiểu
+        // globalMinimumCollateralization: tài sản thế chấp tối thiểu toàn cầu
+        // collateralizationLowerBound: giới hạn dưới của thế chấp tài sản
+        // transmuter: máy biến áp
+        // protocolFeeReceiver: người nhận phí của giao thức
+        // lastEarmarkedBlock: khối đánh dấu cuối cùng
+        // lastRedemptionBlock: khối đổi quà cuoos cùng
+        // myt: token MYT
         debtToken = params.debtToken;
         underlyingToken = params.underlyingToken;
         underlyingConversionFactor = 10 ** (TokenUtils.expectDecimals(params.debtToken) - TokenUtils.expectDecimals(params.underlyingToken));
@@ -198,7 +216,9 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     event AlchemistV3PositionNFTMinted(address indexed to, uint256 indexed tokenId);
 
     /// @notice Sets the NFT position token, callable by admin.
+    // Đặt vị trí NFT cho Alchemist
     function setAlchemistPositionNFT(address nft) external onlyAdmin {
+        // Nếu nft = 0 thì hoàn nguyên, nếu alchemistPositionNFT không bằng 0 thì không set được
         if (nft == address(0)) {
             revert AlchemistV3NFTZeroAddressError();
         }
@@ -211,7 +231,9 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3AdminActions
+    // Thiết lập kho tiền phí cho giao thức
     function setAlchemistFeeVault(address value) external onlyAdmin {
+        // Vault được thiết lập phải có token = với token cơ bản
         if (IFeeVault(value).token() != underlyingToken) {
             revert AlchemistVaultTokenMismatchError();
         }
@@ -220,6 +242,7 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3AdminActions
+    // Đặt quản trị viên đang chờ xử lý
     function setPendingAdmin(address value) external onlyAdmin {
         pendingAdmin = value;
 
@@ -227,7 +250,9 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3AdminActions
+    // Quản trị viên được nhận
     function acceptAdmin() external {
+        // Kiểm tra trạng thái
         _checkState(pendingAdmin != address(0));
 
         if (msg.sender != pendingAdmin) {
@@ -242,7 +267,9 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3AdminActions
+    // Đặt giới hạn tiền gửi
     function setDepositCap(uint256 value) external onlyAdmin {
+        // Kiểm tra đối số để biết đối số có lớn hơn hoặc bằng với số dư myt đang có trong contract không
         _checkArgument(value >= IERC20(myt).balanceOf(address(this)));
 
         depositCap = value;
@@ -282,6 +309,7 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3AdminActions
+    // Đặt bộ điều hợp token
     function setTokenAdapter(address value) external onlyAdmin {
         _checkArgument(value != address(0));
 
@@ -290,6 +318,7 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3AdminActions
+    // Đặt người bảo vệ
     function setGuardian(address guardian, bool isActive) external onlyAdmin {
         _checkArgument(guardian != address(0));
 
@@ -298,6 +327,7 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3AdminActions
+    // Thiết lập mức thế chấp tối thiểu
     function setMinimumCollateralization(uint256 value) external onlyAdmin {
         _checkArgument(value >= FIXED_POINT_SCALAR);
         minimumCollateralization = value;
@@ -313,6 +343,7 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3AdminActions
+    // Thiết lập giới hạn dưới của tài sản thế chấp
     function setCollateralizationLowerBound(uint256 value) external onlyAdmin {
         _checkArgument(value <= minimumCollateralization);
         _checkArgument(value >= FIXED_POINT_SCALAR);
@@ -333,7 +364,9 @@ contract AlchemistV3 is IAlchemistV3, Initializable {
     }
 
     /// @inheritdoc IAlchemistV3State
+    // Nhận CDP
     function getCDP(uint256 tokenId) external view returns (uint256, uint256, uint256) {
+       //  _calculateUnrealizedDebt: Tính toán nợ chưa thực hiện
         (uint256 debt, uint256 earmarked, uint256 collateral) = _calculateUnrealizedDebt(tokenId);
         return (collateral, debt, earmarked);
     }
